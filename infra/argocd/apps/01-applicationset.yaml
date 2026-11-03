@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kafka-stack
+  namespace: openshift-gitops
+spec:
+  generators:
+    - list:
+        elements:
+          - name: kafka-operator
+            path: infra/kafka/operator
+            destNamespace: amq-streams-operator
+          - name: kafka-cluster
+            path: infra/kafka/cluster
+            destNamespace: kafka-cluster
+  template:
+    metadata:
+      name: '{{name}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/rh-imesquit/ocp-kafka-gitops-repo
+        targetRevision: main
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{destNamespace}}'
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=false
+          - RespectIgnoreDifferences=true
+          - ApplyOutOfSyncOnly=true
